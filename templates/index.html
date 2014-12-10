@@ -1,0 +1,65 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>gPatent API</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width">
+
+        <link rel="stylesheet" href="{{ url_for('static', filename='components/bootstrap/dist/css/bootstrap.css') }}" />
+        <style type="text/css">
+
+        </style>
+        <script src="{{ url_for('static', filename='components/jquery-2.1.1.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='components/bootstrap/dist/js/bootstrap.js') }}"></script>
+    </head>
+    <body ng-app="gPatent">
+
+        <div class="container" ng-controller="PublicationController">
+            <div class="row">
+                <div class="col-sm-6 text-center">
+                    <h2>Test the gPatent API</h2>
+                    <form role="form" class="form-inline" name="gPatentDataForm" novalidate ng-submit="gPatentDataForm.$valid && get_gPatentData()">
+                        <div class="form-group">
+                            <label class="sr-only" for="publication_number">Publication Number:</label>
+                            <input type="text" class="form-control" id="publication_number"
+                                   name="publication_number" placeholder="Publication Number"
+                                   ng-model="publicationNumber" required />
+                            <button class="btn btn-primary btn-sm" type="submit" ng-disabled="!gPatentDataForm.$valid">Go!</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="col-sm-6">
+                    <div class="panel panel-danger">
+                        <div class="panel-heading">
+                            <h3>gPatent API Limitations</h3>
+                        </div>
+                        <div class="panel-body">
+                            <p>The <code>gPatent API</code> currently works only with US Patent and Publication data.  Entering a query for
+                                patent/publication information from other countries will result in 404 Not found error.</p>
+                            <p> Queries should be in the following format:
+                                <ul class="list-unstyled">
+                                    <li><p><strong>Patents</strong> - US8123456 or US8123456B2</p></li>
+                                    <li><p><strong>Published Applications</strong> - US20090143797 or US20090143797A1</p></li>
+                                </ul>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row" ng-show="requestStatus===200">
+                <div class="col-sm-12">
+                    <h2>Data for <span ng-bind="fullNumber"></span>:</h2>
+                    <pre ng-bind="jsonData"></pre>
+                </div>
+            </div>
+        </div>
+
+
+        <script src="{{ url_for('static', filename='components/angular/angularjs/angular.js') }}"></script>
+        <script src="{{ url_for('static', filename='components/angular/gPatent/gPatent.js') }}"></script>
+        <script src="{{ url_for('static', filename='components/angular/json-formatter/json-formatter.js') }}"></script>
+    </body>
+</html>

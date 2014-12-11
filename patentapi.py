@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 import re
 import urllib.request, urllib.error
+import htmlmin
 
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, NavigableString, Tag
 from collections import OrderedDict
 from datetime import datetime
 from httpfile import HttpFile
@@ -153,13 +154,18 @@ class GooglePatentPublication( PatentPublication ):
         req = urllib.request.Request(url,headers={'User-Agent' : 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0; EIE10;ENUSMCM'}) # create the Google patents HttpRequest object
 
         resp = urllib.request.urlopen(req) # create an HttpResponse object, open the url request and place the response into the HttpResponse object
-        return str(resp.read())
+        html = str(resp.read())
+        #html = html.decode('utf-8')
+        #print(htmlmin.minify(html).encode('utf-8'))
+        return htmlmin.minify(html)
 
     def __populate_biblio( self ):
         #print(self.publication_number)
 
         # create a BS4 object to parse the Google HTML
         bSoup = BeautifulSoup(self.__html, 'lxml')
+
+        print(bSoup.original_encoding)
 
         # In the Google HTML, there is a <table> element with class="patent-bibdata". This table has most of the bibliographic
         # data in table cells adjacent to cells with the data heading with class "patent-bibdata-heading".  We'll use BS4's
@@ -325,9 +331,32 @@ class GooglePatentPublication( PatentPublication ):
         #---------------------------------------------------
         # Get the Claims
         #---------------------------------------------------
-        #soupClaims = bSoup.find("div", class_="patent-section patent-claims-section")
-        soupClaims = bSoup.find_all("div", class_="claims")
-        print(len(soupClaims))
+        claims = []     # Initialize the claims array to an emtpy array
+
+        # Google Patents keeps the claims deep within a div having a class="patent-claims-section"
+        # Within this div is a div that has a class="claims".  This is the only div in the page having class=claims
+        # Using BS4, we can extract this div by searching on class_="claims"
+        soupClaims = bSoup.find('div', class_="claims")
+
+        # Each claim has a class that is either "claim" (for independent claims) or "claim-dependent" (for dependent claims)
+        # We can break up the claims into sets of depenedent and independent by searching the "claims" div for the appropriate class
+        soupIClaims = soupClaims.find_all('div', class_="claim", recursive=False)               #independent claims
+        soupDClaims = soupClaims.find_all('div', class_="claim-dependent", recursive=False)     #dependent claims
+
+        # Each claim (whether dependent or independent) will be made up of NavigableStrings
+
+        for iClaim in soupIClaims:
+            #child = iClaim.find('div')
+            #grandchild = child.contents[0]
+            for child in iClaim.children:
+                print(child)
+
+            print('\n')
+
+
+        #print(claims)
+        self.claims = claims
+
 
 def validate_publication( publication_number ):
     import re
@@ -370,6 +399,6 @@ def process_citation( strng ):
 
 if __name__ == "__main__":
 
-    pat = GooglePatentPublication("US8061014")
-    #pat = GooglePatentPublication("US80610143")
+    #pat = GooglePatentPublication("US8123456")
+    pat = GooglePatentPublication("US8623013")
     #pat = GooglePatentPublication("w;lejtw")

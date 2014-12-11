@@ -8,7 +8,12 @@
 
         <link rel="stylesheet" href="{{ url_for('static', filename='components/bootstrap/dist/css/bootstrap.css') }}" />
         <style type="text/css">
-
+            input.ng-dirty.ng-invalid {
+              border: 1px solid red
+            }
+            input.ng-dirty.ng-valid {
+              border: 1px solid green
+            }
         </style>
         <script src="{{ url_for('static', filename='components/jquery-2.1.1.min.js') }}"></script>
         <script src="{{ url_for('static', filename='components/bootstrap/dist/js/bootstrap.js') }}"></script>
@@ -24,8 +29,14 @@
                             <label class="sr-only" for="publication_number">Publication Number:</label>
                             <input type="text" class="form-control" id="publication_number"
                                    name="publication_number" placeholder="Publication Number"
-                                   ng-model="publicationNumber" required />
+                                   ng-change="clearJSON()"
+                                   ng-model="publicationNumber" required
+                                   ng-pattern="/us[\d]{1,15}/i"
+                                   ng-class="{ng-invalid: !gPatentDataForm.$valid, ng-valid: gPatentDataForm.$valid}" />
                             <button class="btn btn-primary btn-sm" type="submit" ng-disabled="!gPatentDataForm.$valid">Go!</button>
+                            <button class="btn btn-primary btn-sm" type="button"
+                                    ng-disabled="!gPatentDataForm.$valid"
+                                    ng-click="resetgPatentDataForm()">Reset</button>
                         </div>
                     </form>
                 </div>
@@ -49,10 +60,14 @@
                 </div>
             </div>
 
-            <div class="row" ng-show="requestStatus===200">
-                <div class="col-sm-12">
-                    <h2>Data for <span ng-bind="fullNumber"></span>:</h2>
-                    <pre ng-bind="jsonData"></pre>
+            <div class="row">
+                <div class="col-sm-6">
+                    <h2>gData for <span ng-bind="publicationNumber"></span>:</h2>
+                    <pre ng-bind="gJSONData"></pre>
+                </div>
+                <div class="col-sm-6">
+                    <h2>opsData for <span ng-bind="publicationNumber"></span>:</h2>
+                    <pre ng-bind="opsJSONData"></pre>
                 </div>
             </div>
         </div>

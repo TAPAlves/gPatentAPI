@@ -52,22 +52,22 @@ class PatentPublication ( object ):
 
 class GooglePatentPublication( PatentPublication ):
     """ Returns a PatentPublication object
-			If the <pub_num> parameter is passed, the class will attempt to fetch information scraped from the Google Patents
-			website corresponding to the passed parameter.
-				<pub_num> should be of the form CC[XXXXXX]X[KC]
-					- CC: country code
-					- X: 0-9
-					- KC: kind code
-			If <pub_num> is omitted, a blank object will be created.
-	"""
+            If the <pub_num> parameter is passed, the class will attempt to fetch information scraped from the Google Patents
+            website corresponding to the passed parameter.
+                <pub_num> should be of the form CC[XXXXXX]X[KC]
+                    - CC: country code
+                    - X: 0-9
+                    - KC: kind code
+            If <pub_num> is omitted, a blank object will be created.
+    """
 
     # Initialization
     def __init__( self, pub_num=None ):
         ######################################################################################################################################################
-		#
-		# STEP 1 - Set the initial state of each field in the object
-		#
-		######################################################################################################################################################
+        #
+        # STEP 1 - Set the initial state of each field in the object
+        #
+        ######################################################################################################################################################
 
         # Initialize the Base Class so the fields are available in the GooglePatentPublications class instance
         PatentPublication.__init__(self)
@@ -169,20 +169,20 @@ class GooglePatentPublication( PatentPublication ):
 
         # Kind Code
         for item in biblio_list:
-    		# Patent Number (set the patent object's CC, NUM and KC)
-    	    # Iterate through the <TD> items using BS4, and find the one with text "Publication number"
-    		# The sibling "<TD>" should hold the Publication Number data, so use "next_sibling" and
-    		# get the text using "getText() method
+            # Patent Number (set the patent object's CC, NUM and KC)
+            # Iterate through the <TD> items using BS4, and find the one with text "Publication number"
+            # The sibling "<TD>" should hold the Publication Number data, so use "next_sibling" and
+            # get the text using "getText() method
 
             if (((item.getText()).lower() == 'publication number') and not(self.kind_code)):
-                full_num = item.next_sibling.getText()	# should be of form "CCXXXXXXXKC"
-                print(full_num)
-                kind_code = full_num[-2:].strip()				# kind_code is last
+                full_num = item.next_sibling.getText()    # should be of form "CCXXXXXXXKC"
+                #print(full_num)
+                kind_code = full_num[-2:].strip()                # kind_code is last
                 #print(kind_code)
                 country = full_num[:2].strip()
                 #print(country)
                 publ_num = (full_num[2:-2]).strip()
-                print('num = ' + publ_num)
+                #print('num = ' + publ_num)
 
                 self.id = country + publ_num + kind_code
                 self.publication_number = publ_num
@@ -195,7 +195,7 @@ class GooglePatentPublication( PatentPublication ):
                 app_num = app_num[2:len(app_num)].strip()
                 self.application_number = app_num
 
-			# Google's calculated Priority Date
+            # Google's calculated Priority Date
             try:
                 if ((item.getText()).lower() == 'priority date'):
                     google_priority_date = (item.next_sibling.getText()).strip()
@@ -204,7 +204,7 @@ class GooglePatentPublication( PatentPublication ):
             except:
                 pass
 
-			# Publication Date
+            # Publication Date
             try:
                 if ((item.getText()).lower() =='publication date'):
                     pub_date = (item.next_sibling.getText()).strip()
@@ -213,7 +213,7 @@ class GooglePatentPublication( PatentPublication ):
             except:
                 pass
 
-			# Filing Date
+            # Filing Date
             try:
                 if ((item.getText()).lower() =='filing date'):
                     filing_date = (item.next_sibling.getText()).strip()
@@ -246,7 +246,7 @@ class GooglePatentPublication( PatentPublication ):
         #
         # Title
         try:
-            title_meta = bSoup.find('meta', attrs={'name':'DC.title'})	# this is a bs4 Tag element
+            title_meta = bSoup.find('meta', attrs={'name':'DC.title'})    # this is a bs4 Tag element
             title_text = character_replace(title_meta['content'])
             self.title = title_text
             #print('Title: ' + self.title)
@@ -362,6 +362,6 @@ def process_citation( strng ):
 
 if __name__ == "__main__":
 
-	pat = GooglePatentPublication("US8061014")
-	#pat = GooglePatentPublication("US80610143")
-	#pat = GooglePatentPublication("w;lejtw")
+    pat = GooglePatentPublication("US8061014")
+    #pat = GooglePatentPublication("US80610143")
+    #pat = GooglePatentPublication("w;lejtw")

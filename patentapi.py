@@ -113,7 +113,7 @@ class GooglePatentPublication( PatentPublication ):
         ######################################################################################################################################################
         #
         # STEP 4 - Presumably, we have a Google Patent HTML Page for the requested Publication Number.  So, now we call a helper function
-        #          to popolate the GooglePatentPublication fields.
+        #          to populate the GooglePatentPublication fields.
         #
         ######################################################################################################################################################
         if self.__html:
@@ -320,6 +320,14 @@ class GooglePatentPublication( PatentPublication ):
 
         if z : self.file_history = url
         #print('\n\nfile history link: ' + str(self.file_history) + '\n\n')
+
+
+        #---------------------------------------------------
+        # Get the Claims
+        #---------------------------------------------------
+        #soupClaims = bSoup.find("div", class_="patent-section patent-claims-section")
+        soupClaims = bSoup.find_all("div", class_="claims")
+        print(len(soupClaims))
 
 def validate_publication( publication_number ):
     import re

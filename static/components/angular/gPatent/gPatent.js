@@ -3,7 +3,8 @@
 
     var gPatent = angular
         .module('gPatent', [
-            'jsonFormatter'
+            'jsonFormatter',
+            'treeControl'
         ]);
 
 
@@ -14,9 +15,32 @@
             $scope.publicationNumber = null;
             $scope.requestStatus = null;
             $scope.fullNumber = null;
+            $scope.treeOptions = {
+                nodeChildren: "elements",
+                dirSelectable: true
+            };
+
+            $scope.showSelected = function (sel) {
+                $scope.selectedNode = sel;
+            };
+
+            /* $scope.gPatent = [
+                { "name" : "Joe", "age" : "21", "children" : [
+                    { "name" : "Smith", "age" : "42", "children" : [] },
+                    { "name" : "Gary", "age" : "21", "children" : [
+                        { "name" : "Jenifer", "age" : "23", "children" : [
+                            { "name" : "Dani", "age" : "32", "children" : [] },
+                            { "name" : "Max", "age" : "34", "children" : [] }
+                        ]}
+                    ]}
+                ]},
+                { "name" : "Albert", "age" : "33", "children" : [] },
+                { "name" : "Ron", "age" : "29", "children" : [] }
+            ];
+            */
 
             $scope.get_gPatentData = function () {
-                console.log($scope.publicationNumber);
+                //console.log($scope.publicationNumber);
 
                 // Get the Google Patent Data
                 $http({
@@ -28,13 +52,15 @@
                     data: JSON.stringify($scope.publicationNumber)
                 })
                     .success(function (data, status, headers, config) {
-                        console.log(data);
+                        //console.log(data);
                         $scope.fullNumber = data.id;
                         $scope.requestStatus = data.status;
                         $scope.gJSONData = JSON.stringify(data, null, 2);
+                        $scope.gPatent = data.claims;
+                        //console.log($scope.gPatent)
                     })
                     .error(function (data, status, headers, config) {
-                        console.log(data);
+                        //console.log(data);
                         $scope.requestStatus = data.status;
                         $scope.gJSONData = JSON.stringify(data, null, 2);
                     });
@@ -65,4 +91,33 @@
             };
         }
     ]);
+
+    gPatent.directive("claimElement", function ($compile) {
+        return {
+            restrict: "E",
+            transclude: true,
+            scope: {element: '='},
+            replace: true,
+            template:
+                '<div>' +
+                    '<div ng-transclude></div>' +
+                    '<div ng-repeat="child in element.children">' +
+                        '<claim-element element="child"><div ng-transclude style="margin-left:20px;margin-top:20px;"></div></claim-element>' +
+                    '</div>' +
+                '</div>',
+            compile: function (tElement, tAttr, transclude) {
+                var contents = tElement.contents().remove(),
+                    compiledContents;
+                return function (scope, iElement, iAttr) {
+
+                    if (!compiledContents) {
+                        compiledContents = $compile(contents, transclude);
+                    }
+                    compiledContents(scope, function (clone, scope) {
+                        iElement.append(clone);
+                    });
+                };
+            }
+        };
+    });
 }());

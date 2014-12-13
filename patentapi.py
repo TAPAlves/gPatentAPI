@@ -3,7 +3,7 @@ import re
 import urllib.request, urllib.error
 import htmlmin
 
-from bs4 import BeautifulSoup, NavigableString, Tag
+from bs4 import BeautifulSoup,SoupStrainer, NavigableString, Tag
 from collections import OrderedDict
 from datetime import datetime
 from httpfile import HttpFile
@@ -154,8 +154,8 @@ class GooglePatentPublication( PatentPublication ):
         req = urllib.request.Request(url,headers={'User-Agent' : 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0; EIE10;ENUSMCM'}) # create the Google patents HttpRequest object
 
         resp = urllib.request.urlopen(req) # create an HttpResponse object, open the url request and place the response into the HttpResponse object
-        html = str(resp.read())
-        #html = html.decode('utf-8')
+        #html = str(resp.read())
+        html = resp.read().decode('utf-8')
         #print(htmlmin.minify(html).encode('utf-8'))
         return htmlmin.minify(html)
 
@@ -163,9 +163,8 @@ class GooglePatentPublication( PatentPublication ):
         #print(self.publication_number)
 
         # create a BS4 object to parse the Google HTML
-        bSoup = BeautifulSoup(self.__html, 'lxml')
-
-        print(bSoup.original_encoding)
+        strainer = SoupStrainer('html')
+        bSoup = BeautifulSoup(self.__html, 'lxml', parse_only=strainer)
 
         # In the Google HTML, there is a <table> element with class="patent-bibdata". This table has most of the bibliographic
         # data in table cells adjacent to cells with the data heading with class "patent-bibdata-heading".  We'll use BS4's
@@ -335,27 +334,109 @@ class GooglePatentPublication( PatentPublication ):
 
         # Google Patents keeps the claims deep within a div having a class="patent-claims-section"
         # Within this div is a div that has a class="claims".  This is the only div in the page having class=claims
-        # Using BS4, we can extract this div by searching on class_="claims"
-        soupClaims = bSoup.find('div', class_="claims")
+        # Using BS4, we can extract this div by searching on class_="claims".
+        soupClaimsContainer = bSoup.find('div', class_="claims")
 
+        # The soupClaimsContainer contains DIV elements that represent each claim.
         # Each claim has a class that is either "claim" (for independent claims) or "claim-dependent" (for dependent claims)
-        # We can break up the claims into sets of depenedent and independent by searching the "claims" div for the appropriate class
-        soupIClaims = soupClaims.find_all('div', class_="claim", recursive=False)               #independent claims
-        soupDClaims = soupClaims.find_all('div', class_="claim-dependent", recursive=False)     #dependent claims
-
-        # Each claim (whether dependent or independent) will be made up of NavigableStrings
-
-        for iClaim in soupIClaims:
-            #child = iClaim.find('div')
-            #grandchild = child.contents[0]
-            for child in iClaim.children:
-                print(child)
-
-            print('\n')
+        soupClaimsList = soupClaimsContainer.find_all('div', recursive=False)
 
 
-        #print(claims)
+        # Each claim will comprise NavigableStrings and other Tag elements (mostly DIVs containing other DIVs or NavigableStrings)
+        # The <div class="claim [claim-dependent]"> container will contain a single DIV with id=:CLM-XXXXX", num="XXXXX", class="claim"
+        # This is the outer-most container of the individual claim information.
+        # Iterating through the soupClaimsList list, we can extract information or further process each individual claim
+        for iClaim in soupClaimsList:
+            claim = {'depends-from':None}       # initialize an object to contain the claim information
+                                                # for our GooglePatentPublication object
+                                                # initially, we set the "depends-from" property to None to default to an
+                                                # independent claim
+
+            # claimContainer will be the DIV with id, num and class attributes
+            # set recursive=False because we only want the top level DIVs
+            claimContainer = iClaim.find('div', recursive=False)
+
+            # Add the 'number' property to the claim object  Number identifies the claim by number
+            claim['number'] = int(claimContainer['num'])
+
+            # claimElementContainersList will be a list of DIV elements that contain the text of the claim
+            # set recursive=False because we only want the top level DIVs
+            claimElementContainersList = claimContainer.find_all('div', recursive=False)
+            # BuildClaim will create the JSON structure for each claim
+            BuildClaim(claimElementContainersList, claim)
+
+            # Add the JSON claim to the claims list
+            claims.append(claim)
+
         self.claims = claims
+
+def BuildClaim(containerList, claim):
+    ''' Analyze the claim information returned from Google Patents and transform it into a JSON representation.'''
+
+    # Initialize an array to hold the claim elements
+    claim_elements = []
+    # containerList was passed in as a parameter and holds a list of DIV elements that contain element text and
+    # other DIVs comprising sub-elements.
+    # We loop through the list and determine if this is a dependent or independent claim
+    for container in containerList:
+        #look for a <claim-ref> tag.  If it exists, this is a dependent claim, so we will
+        # set claim['depends-from'] = to the clim's parent number, which can be derived from the claim-ref tag's
+        # idref attribute
+        claimref = container.find('claim-ref')
+        if claimref:
+            # idref is in the form CLM-XXXXX.  We split that string and select only the numerical portion.
+            # don't forget to cast the number to an INTEGER
+            claim['depends-from'] = int(claimref['idref'].split('-')[1])
+
+        # TODO: There are tags that will appear in some patent claims and not others (e.g., <CHEMISTRY>.
+        # Need to add support for these as they arise.
+
+        # Now pass the container to the BuildClaimElement function, which returns a JSON object representing the
+        # claim element.  Then, append that claim element to the claim_elements list
+        claim_elements.append(BuildClaimElement(container))
+
+
+    # after all the container items have been processed, the claim_elements list should contain a JSON object representing
+    # all of the elements in the claim.  We then add that object to the 'elements' property of the claim object.
+    claim['elements'] = claim_elements
+    return
+
+
+def BuildClaimElement(container):
+    ''' Build an element of the JSON claim structure. '''
+    element = {}                                                    #initialize the element object
+    element_text = ''                                               #initialize the element's text
+    element_children = container.find_all('div', recursive=False)   #find all child elements, if any
+
+    # interate through all the contents of the bSoup container to build the text of the claim element
+    for child in container.children:
+        # if the child element is a NavigableString, it's part of the text for the claim element
+        # otherwise, it's probably a child element
+        if (child.string and (not child.name == 'div')):
+        #if (isinstance(child, NavigableString) and not(child.string.strip() == '')) or child.name == 'claim-ref' :
+            element_text += child.string
+
+    # Once the element text is built, add it to the 'text' property of the element object
+    element['text'] = (strip_claim_number(element_text.strip())).strip()
+    #element['text'] = (element_text.strip()).strip()
+
+    element['children'] = []        # child elements will be stored in an array of element objects, so init the children property
+
+    # Now loop through the child elements we found above and call this function recursively to build the child elements
+    for elem in element_children:
+        new_elements = []
+        element['children'].append(BuildClaimElement(elem))
+
+    #elements.append(element)
+    return element
+
+
+def strip_claim_number(text):
+    import re
+    pattern = '^\d{0,3}\.\s{1,5}'
+
+    return re.sub(pattern, '', text)
+
 
 
 def validate_publication( publication_number ):
@@ -400,5 +481,6 @@ def process_citation( strng ):
 if __name__ == "__main__":
 
     #pat = GooglePatentPublication("US8123456")
-    pat = GooglePatentPublication("US8623013")
+    #pat = GooglePatentPublication("US8623013")
+    pat = GooglePatentPublication("US8501436")
     #pat = GooglePatentPublication("w;lejtw")

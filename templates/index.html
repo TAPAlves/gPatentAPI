@@ -11,6 +11,13 @@
         <link rel="stylesheet" href="{{ url_for('static', filename='components/angular-tree-control/css/tree-control.css') }}" />
         <link rel="stylesheet" href="{{ url_for('static', filename='components/json-formatter/json-formatter.css') }}" />
         <style type="text/css">
+            body {
+              padding-top: 60px;
+              padding-bottom: 60px;
+            }
+
+            .nav, .pagination, .carousel, .panel-title a { cursor: pointer; }
+
             input.ng-dirty.ng-invalid {
               border: 1px solid red
             }
@@ -18,88 +25,137 @@
               border: 1px solid green
             }
         </style>
-        <script src="{{ url_for('static', filename='components/jquery-2.1.1.min.js') }}"></script>
-        <script src="{{ url_for('static', filename='components/bootstrap/dist/js/bootstrap.js') }}"></script>
     </head>
+
     <body ng-app="gPatent">
 
-        <div class="container" ng-controller="PublicationController">
-            <div class="row">
-                <div class="col-sm-6 text-center">
-                    <h2>Test the gPatent API</h2>
-                    <form role="form" class="form-inline" name="gPatentDataForm" novalidate ng-submit="gPatentDataForm.$valid && get_gPatentData()">
-                        <div class="form-group">
-                            <label class="sr-only" for="publication_number">Publication Number:</label>
-                            <input type="text" class="form-control" id="publication_number"
-                                   name="publication_number" placeholder="Publication Number"
-                                   ng-change="clearJSON()"
-                                   ng-model="publicationNumber" required
-                                   ng-pattern="/us[\d]{1,15}/i" />
-                            <button class="btn btn-primary btn-sm" type="submit" ng-disabled="!gPatentDataForm.$valid">Go!</button>
-                            <button class="btn btn-primary btn-sm" type="button"
-                                    ng-disabled="!gPatentDataForm.$valid"
-                                    ng-click="resetgPatentDataForm()">Reset</button>
-                        </div>
-                    </form>
-                </div>
+        <div class="container-fluid" ng-controller="PublicationController">
 
-                <div class="col-sm-6">
-                    <div class="panel panel-danger">
-                        <div class="panel-heading">
-                            <h3>gPatent API Limitations</h3>
-                        </div>
-                        <div class="panel-body">
-                            <p>The <code>gPatent API</code> currently works only with US Patent and Publication data.  Entering a query for
-                                patent/publication information from other countries will result in 404 Not found error.</p>
-                            <p> Queries should be in the following format:
-                                <ul class="list-unstyled">
-                                    <li><p><strong>Patents</strong> - US8123456 or US8123456B2</p></li>
-                                    <li><p><strong>Published Applications</strong> - US20090143797 or US20090143797A1</p></li>
-                                </ul>
-                            </p>
-                        </div>
+            <!-- NAVBAR -->
+            <header>
+                <nav class="navbar navbar-default navbar-fixed-top" bs-collapse>
+                    <div class="navbar-header">
+                        <button type="button" class="navbar-toggle collapsed" bs-collapse-toggle>
+                            <span class="sr-only">Toggle navigation</span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                        <a class="navbar-brand" href="#">gPatentAPI</a>
                     </div>
-                </div>
-            </div>
+                    <div bs-collapse-target>
+                        <ul class="nav navbar-nav">
+                            <li><a href="#">home</a></li>
+                        </ul>
+                    </div>
+                </nav>
+            </header>
+            <!-- END NAVBAR -->
 
-            <div class="row">
-                <div class="col-md-12">
-                    <div class="panel panel-default" ng-repeat="claim in gPatent" style="margin-top:50px" ng-init="showClaim=true">
-                        <div class="panel-heading">
-                            <h4 class="panel-title" ng-click="showClaim=!showClaim">Claim
-                                <span ng-bind="claim.number"></span>
-                                <span class="pull-right">hide/show</span>
-                            </h4>
 
-                        </div>
-                        <div class="panel-body">
-                            <div ng-repeat="element in claim.elements" ng-show="showClaim">
-                                <claim-element element="element"><span ng-bind="element.text"></span></claim-element>
+            <!-- MAIN CONTENT -->
+            <div class="container">
+
+                <div class="row">
+                    <div class="col-sm-6 text-center">
+                        <h2>Test the gPatent API</h2>
+                        <form role="form" class="form-inline" name="gPatentDataForm" novalidate ng-submit="gPatentDataForm.$valid && get_gPatentData()">
+                            <div class="form-group">
+                                <label class="sr-only" for="publication_number">Publication Number:</label>
+                                <input type="text" class="form-control" id="publication_number"
+                                       name="publication_number" placeholder="Publication Number"
+                                       ng-change="clearJSON()"
+                                       ng-model="publicationNumber" required
+                                       ng-pattern="/us[\d]{1,15}/i" />
+                                <button class="btn btn-primary btn-sm" type="submit" ng-disabled="!gPatentDataForm.$valid">Go!</button>
+                                <button class="btn btn-primary btn-sm" type="button"
+                                        ng-disabled="!gPatentDataForm.$valid"
+                                        ng-click="resetgPatentDataForm()">Reset</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="col-sm-6">
+                        <div class="panel panel-danger">
+                            <div class="panel-heading">
+                                <h3>gPatent API Limitations</h3>
+                            </div>
+                            <div class="panel-body">
+                                <p>The <code>gPatent API</code> currently works only with US Patent and Publication data.  Entering a query for
+                                    patent/publication information from other countries will result in 404 Not found error.</p>
+                                <p> Queries should be in the following format:
+                                    <ul class="list-unstyled">
+                                        <li><p><strong>Patents</strong> - US8123456 or US8123456B2</p></li>
+                                        <li><p><strong>Published Applications</strong> - US20090143797 or US20090143797A1</p></li>
+                                    </ul>
+                                </p>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="panel panel-default" ng-repeat="claim in gPatent" style="margin-top:50px" ng-init="showClaim=true">
+                            <div class="panel-heading">
+                                <h4 class="panel-title" ng-click="showClaim=!showClaim">Claim
+                                    <span ng-bind="claim.number"></span>
+                                    <span class="pull-right">hide/show</span>
+                                </h4>
+
+                            </div>
+                            <div class="panel-body">
+                                <div ng-repeat="element in claim.elements" ng-show="showClaim">
+                                    <claim-element element="element"><span ng-bind="element.text"></span></claim-element>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-sm-6">
+                        <h2>gData for <span ng-bind="publicationNumber"></span>:</h2>
+                        <pre ng-bind="gJSONData"></pre>
+                    </div>
+                    <div class="col-sm-6">
+                        <h2>opsData for <span ng-bind="publicationNumber"></span>:</h2>
+                        <pre ng-bind="opsJSONData"></pre>
+                    </div>
+                </div>
+
             </div>
+            <!-- END MAIN CONTENT -->
 
 
-            <div class="row">
-                <div class="col-sm-6">
-                    <h2>gData for <span ng-bind="publicationNumber"></span>:</h2>
-                    <pre ng-bind="gJSONData"></pre>
+            <!-- SITE FOOTER -->
+            <footer>
+                <div class="navbar navbar-default navbar-fixed-bottom">
+                    <div>
+                        <p class="navbar-text pull-left"><span class="glyphicon glyphicon-fire"></span> Powered by
+                            <a target="_blank" href="http://www.angularjs.org">AngularJS</a>,
+                            <a target="_blank" href="http://www.python.org">Python</a>
+                            <a target="_blank" href="http://flask.pocoo.org/">Flask</a>,
+                            <a target="_blank" href="http://www.firebase.com">Firebase</a></p>
+                        <p class="navbar-text pull-right"><span class="glyphicon glyphicon-copyright-mark"> </span>
+                            2014 Steve Perkins, all rights reserved</span></p>
+                    </div>
                 </div>
-                <div class="col-sm-6">
-                    <h2>opsData for <span ng-bind="publicationNumber"></span>:</h2>
-                    <pre ng-bind="opsJSONData"></pre>
-                </div>
-            </div>
+            </footer>
+            <!-- END SITE FOOTER -->
 
         </div>
 
-
         <script src="{{ url_for('static', filename='components/angular/angularjs/angular.js') }}"></script>
-        <script src="{{ url_for('static', filename='components/angular/gPatent/gPatent.js') }}"></script>
         <script src="{{ url_for('static', filename='components/angular/json-formatter/json-formatter.js') }}"></script>
         <script src="{{ url_for('static', filename='components/angular-tree-control/angular-tree-control.js') }}"></script>
         <script src="{{ url_for('static', filename='components/json-formatter/json-formatter.js') }}"></script>
+
+        <script src="{{ url_for('static', filename='components/ui-bootstrap/ui-bootstrap-tpls-0.12.0.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='components/angular-strap/angular-strap.js') }}"></script>
+        <script src="{{ url_for('static', filename='components/angular-strap/angular-strap.tpl.js') }}"></script>
+
+        <script src="{{ url_for('static', filename='components/angular/gPatent/gPatent.js') }}"></script>
+
     </body>
 </html>

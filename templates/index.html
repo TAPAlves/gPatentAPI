@@ -10,6 +10,7 @@
         <link rel="stylesheet" href="{{ url_for('static', filename='components/angular-tree-control/css/tree-control-attribute.css') }}" />
         <link rel="stylesheet" href="{{ url_for('static', filename='components/angular-tree-control/css/tree-control.css') }}" />
         <link rel="stylesheet" href="{{ url_for('static', filename='components/json-formatter/json-formatter.css') }}" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='components/bootstrap.vertical-tabs.css') }}" />
         <style type="text/css">
             body {
               padding-top: 60px;
@@ -25,6 +26,9 @@
               border: 1px solid green
             }
         </style>
+
+        <script src="{{ url_for('static', filename='components/jquery-2.1.1.min.js') }}"></script>
+        <script src="{{ url_for('static', filename='components/bootstrap/dist/js/bootstrap.min.js') }}"></script>
     </head>
 
     <body ng-app="gPatent">
@@ -95,7 +99,28 @@
                 </div>
 
                 <div class="row">
+                    <div class="col-xs-3"> <!-- required for floating -->
+                        <!-- Nav tabs -->
+                        <ul class="nav nav-tabs tabs-left">
+                            <li ng-repeat="claim in gPatent">
+                                <a href="#Claim{[claim.number]}" data-toggle="tab">Claim <span ng-bind="claim.number"></span></a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="col-xs-9">
+                        <!-- Tab panes -->
+                        <div class="tab-pane" ng-repeat="claim in gPatent" id="#Claim{[claim.number]}">
+                            <div ng-repeat="element in claim.elements" ng-show="showClaim">
+                                <claim-element element="element"><span ng-bind="element.text"></span></claim-element>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
                     <div class="col-md-12">
+
                         <div class="panel panel-default" ng-repeat="claim in gPatent" style="margin-top:50px" ng-init="showClaim=true">
                             <div class="panel-heading">
                                 <h4 class="panel-title" ng-click="showClaim=!showClaim">Claim

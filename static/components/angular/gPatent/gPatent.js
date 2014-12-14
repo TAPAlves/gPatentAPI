@@ -9,6 +9,10 @@
             'treeControl'
         ]);
 
+    gPatent.config(['$interpolateProvider', function($interpolateProvider) {
+        $interpolateProvider.startSymbol('{[');
+        $interpolateProvider.endSymbol(']}');
+    }]);
 
     gPatent.controller('PublicationController', [
         '$scope',
@@ -71,6 +75,10 @@
                 $scope.gJSONData = '';
                 $scope.opsJSONData = '';
                 $scope.gPatent = '';
+            };
+
+            $scope.setTab = function (claim_elements) {
+                $scope.active_element = claim_elements;
             };
         }
     ]);
